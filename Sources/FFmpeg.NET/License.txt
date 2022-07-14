@@ -1,0 +1,43 @@
+
+The FFmpeg.NET Library Wrapper of ffmpeg libraries
+
+Copyright 2017-2022 Maxim Kartavenkov (mkartavenkov@gmail.com)
+
+The FFmpeg.NET Wrapper of ffmpeg libraries later "Wrapper Library" is provided "as is" 
+without warranty of any kind; without even the implied warranty of merchantability or 
+fitness for a particular purpose. 
+
+Wrapper Library is the source available software. It is Free to use in non-commercial 
+software and open source projects. Permission is hereby granted for  modification of 
+the source code for own needs. The distribition of the Wrapper Library in software 
+must be as a standalone component. Wrapper Library with dynamic linkage, to keep it 
+name and license information. Wrapper Library name and authors  information should not 
+be changed in any modifications.  The modified Wrapper Library  must be signed with 
+different strong name key.
+
+Licence text of the Wrapper Library must be provided with it in non-commecial or 
+open source software. In case of usage such software in any commercial products then 
+require to follow commercial usage aspects of this license for such products.
+
+Commercial usage cost 200$ (two hundred US dollars) per product. Pricing for unlimited 
+products for the company or in monthly basis - can be discudssed. 
+
+Such fee require for continue supporting this product and making future updates,  
+althought  anyone can perform sponsoring the development of this software. Any donations 
+are also welcome.
+
+Wrapper Library uses the ffmpeg which can be distributed with different licenses of 
+embedded components. FFmpeg is free software and can redistributed under the terms of the 
+GNU Lesser General Public License as published by the Free Software Foundation; either 
+version 2.1 of the License, or (at your option) any later version.To ensure that ffmpeg 
+license is correct for you needs check with which version Wrapper Library binaries are 
+linked, and if necessary rebuild Wrapper Library with ffmpeg version and with the 
+components which are required.
+
+The new versions of the Wrapper Library may contain changes of this license. So the 
+license applied to the version of the Wrapper Library which it belogning to.
+
+If you find this project is useful and want to contribute your changes feel free to 
+contact author.
+
+By using Wrapper Library you are agree with all of the notes of this document.
