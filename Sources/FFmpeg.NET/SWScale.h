@@ -247,6 +247,18 @@ public:
 		array<int>^ srcStride, int srcSliceY, int srcSliceH,
 		array<IntPtr>^ dst,array<int>^ dstStride);
 
+	int Scale(AVArray<IntPtr>^ srcSlice,
+		AVArray<int>^ srcStride, int srcSliceY, int srcSliceH,
+		array<IntPtr>^ dst,array<int>^ dstStride);
+
+	int Scale(array<IntPtr>^ srcSlice,
+		array<int>^ srcStride, int srcSliceY, int srcSliceH,
+		AVArray<IntPtr>^ dst,AVArray<int>^ dstStride);
+
+	int Scale(AVArray<IntPtr>^ srcSlice,
+		AVArray<int>^ srcStride, int srcSliceY, int srcSliceH,
+		AVArray<IntPtr>^ dst,AVArray<int>^ dstStride);
+
 	int Scale(AVPicture^ src,int srcSliceY, int srcSliceH,array<IntPtr>^ dst,array<int>^ dstStride);
 	int Scale(array<IntPtr>^ srcSlice,
 		array<int>^ srcStride,int srcSliceY, int srcSliceH,AVPicture^ dst);

@@ -82,6 +82,9 @@
     <ResourceCompile Include="app.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+    <ResourceCompile Include="Version.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico">
@@ -90,5 +93,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="License.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FFmpeg.NET.nuspec" />
   </ItemGroup>
 </Project>

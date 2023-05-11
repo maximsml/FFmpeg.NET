@@ -125,6 +125,7 @@ public enum class AVSeek : int
 [Flags]
 public enum class AVSeekFlag : int
 {
+	NONE = 0,
 	BACKWARD = 1, ///< seek backward
 	BYTE     = 2, ///< seeking based on position in bytes
 	ANY      = 4, ///< seek to any frame, even non-keyframes
@@ -487,7 +488,7 @@ public:
 
 	property Int64 pos { Int64 get(); }
 	property bool must_flush { bool get(); }
-	property bool eof_reached { bool get(); }
+	property bool eof_reached { bool get(); void set(bool ); }
 	property bool write_flag { bool get(); }
 	property int max_packet_size { int get(); }
 	property UInt32 checksum { UInt32 get(); }
@@ -971,6 +972,8 @@ public:
 	/// It is used check for matching mime types while probing.
 	/// @see av_probe_input_format2
 	property String^ mime_type { String^ get(); }
+
+	property bool can_seek { bool get(); }
 private:
 	/// Raw demuxers store their codec ID here.
 	property int raw_codec_id { int get(); }
@@ -1851,7 +1854,7 @@ public:
 	///        or, if no stream is specified, in AV_TIME_BASE units.
 	/// @param flags flags which select direction and seeking mode
 	/// @return >= 0 on success
-	AVRESULT SeekFrame(int stream_index, long timestamp, AVSeekFlag flags);
+	AVRESULT SeekFrame(int stream_index, __int64 timestamp, AVSeekFlag flags);
 
 	/// Seek to timestamp ts.
 	/// Seeking will be done so that the point from which all active streams
@@ -1878,7 +1881,7 @@ public:
 	/// @note This is part of the new seek API which is still under construction.
 	///       Thus do not use this yet. It may change at any time, do not expect
 	///       ABI compatibility yet!
-	AVRESULT SeekFile(int stream_index, long min_ts, long ts, long max_ts, AVSeekFlag flags);
+	AVRESULT SeekFile(int stream_index, __int64 min_ts, __int64 ts, __int64 max_ts, AVSeekFlag flags);
 
 	/// Discard all internally buffered data. This can be useful when dealing with
 	/// discontinuities in the byte stream. Generally works only with formats that

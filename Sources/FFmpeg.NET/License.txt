@@ -15,6 +15,8 @@ name and license information. Wrapper Library name and authors  information shou
 be changed in any modifications.  The modified Wrapper Library  must be signed with 
 different strong name key.
 
+Library sources can be found on GitHub: https://github.com/S0NIC/FFmpeg.NET
+
 Licence text of the Wrapper Library must be provided with it in non-commecial or 
 open source software. In case of usage such software in any commercial products then 
 require to follow commercial usage aspects of this license for such products.

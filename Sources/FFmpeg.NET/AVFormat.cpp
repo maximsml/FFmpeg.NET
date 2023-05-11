@@ -316,6 +316,10 @@ bool FFmpeg::AVIOContext::eof_reached::get()
 {
 	return ((::AVIOContext*)m_pPointer)->eof_reached != 0;
 }
+void FFmpeg::AVIOContext::eof_reached::set(bool b)
+{
+	((::AVIOContext*)m_pPointer)->eof_reached = b ? 1 : 0;
+}
 bool FFmpeg::AVIOContext::write_flag::get()
 {
 	return ((::AVIOContext*)m_pPointer)->write_flag != 0;
@@ -1478,6 +1482,12 @@ String^ FFmpeg::AVInputFormat::mime_type::get()
 {
 	auto p = ((::AVInputFormat*)m_pPointer)->mime_type;
 	return p != nullptr ? gcnew String(p) : nullptr;
+}
+
+bool FFmpeg::AVInputFormat::can_seek::get()
+{
+	return (((::AVInputFormat*)m_pPointer)->read_seek != nullptr 
+		|| ((::AVInputFormat*)m_pPointer)->read_seek2 != nullptr);
 }
 
 int FFmpeg::AVInputFormat::raw_codec_id::get()
@@ -3613,12 +3623,12 @@ FFmpeg::AVRESULT FFmpeg::AVFormatContext::ReadFrame(AVPacket^ pkt)
 	return av_read_frame((::AVFormatContext*)m_pPointer,(::AVPacket*)pkt->_Pointer.ToPointer());
 }
 
-FFmpeg::AVRESULT FFmpeg::AVFormatContext::SeekFrame(int stream_index, long timestamp, AVSeekFlag flags)
+FFmpeg::AVRESULT FFmpeg::AVFormatContext::SeekFrame(int stream_index, __int64 timestamp, AVSeekFlag flags)
 {
 	return av_seek_frame((::AVFormatContext*)m_pPointer, stream_index, timestamp, (int)flags);
 }
 
-FFmpeg::AVRESULT FFmpeg::AVFormatContext::SeekFile(int stream_index, long min_ts, long ts, long max_ts, AVSeekFlag flags)
+FFmpeg::AVRESULT FFmpeg::AVFormatContext::SeekFile(int stream_index, __int64 min_ts, __int64 ts, __int64 max_ts, AVSeekFlag flags)
 {
 	return avformat_seek_file((::AVFormatContext*)m_pPointer, stream_index, min_ts, ts, max_ts, (int)flags);
 }
@@ -3722,7 +3732,9 @@ void FFmpeg::AVFormatContext::inject_global_side_data()
 
 FFmpeg::AVRational^ FFmpeg::AVFormatContext::GuessSampleAspectRatio(AVStream^ stream, AVFrame^ frame)
 {
-	::AVRational r = av_guess_sample_aspect_ratio((::AVFormatContext*)m_pPointer,(::AVStream*)stream->_Pointer.ToPointer(),(::AVFrame*)frame->_Pointer.ToPointer());
+	::AVRational r = av_guess_sample_aspect_ratio((::AVFormatContext*)m_pPointer
+		,stream != nullptr ? (::AVStream*)stream->_Pointer.ToPointer() : nullptr
+		,frame != nullptr ? (::AVFrame*)frame->_Pointer.ToPointer() : nullptr);
 	return gcnew AVRational(r.num,r.den);
 }
 FFmpeg::AVRational^ FFmpeg::AVFormatContext::GuessFrameRate(AVStream^ stream)

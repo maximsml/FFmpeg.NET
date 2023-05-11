@@ -3603,13 +3603,14 @@ void FFmpeg::AVCodecContext::extra_data::set(array<byte>^ value)
 {
 	if (value != nullptr && value->Length > 0)
 	{
+		av_freep(&((::AVCodecContext*)m_pPointer)->extradata);
 		((::AVCodecContext*)m_pPointer)->extradata_size = value->Length;
-		((::AVCodecContext*)m_pPointer)->extradata = (uint8_t *)AllocMemory("extra_data",((::AVCodecContext*)m_pPointer)->extradata_size).ToPointer();
+		((::AVCodecContext*)m_pPointer)->extradata = (uint8_t*)av_malloc(value->Length + AV_INPUT_BUFFER_PADDING_SIZE);
 		Marshal::Copy(value,0,(IntPtr)((::AVCodecContext*)m_pPointer)->extradata,(int)((::AVCodecContext*)m_pPointer)->extradata_size);
 	}
 	else
 	{
-		FreeMemory("extra_data");
+		av_freep(&((::AVCodecContext*)m_pPointer)->extradata);
 		((::AVCodecContext*)m_pPointer)->extradata_size = 0;
 		((::AVCodecContext*)m_pPointer)->extradata = nullptr;
 	}

@@ -31,7 +31,10 @@ extern "C" {
 #	include <libavutil/motion_vector.h>
 #	include <libavutil/stereo3d.h>
 #	include <libavutil/timestamp.h>
+#	include <libavutil/hash.h>
+#	include <libavutil/base64.h>
 #	include <libavcodec/avcodec.h>
+#	include <libavcodec/avfft.h>
 #	include <libavformat/avformat.h>
 #	include <libavformat/avio.h>
 #	include <libswscale/swscale.h>

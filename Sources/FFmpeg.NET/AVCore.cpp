@@ -464,7 +464,7 @@ void FFmpeg::AVBase::EnsureLibraryLoaded()
 		WCHAR szDrive[MAX_PATH], szDir[MAX_PATH], szFileName[MAX_PATH], szExt[MAX_PATH], szPath[MAX_PATH];
 		GetModuleFileNameW(NULL, szPath, MAX_PATH);
 		_wsplitpath_s(szPath, szDrive, MAX_PATH, szDir, MAX_PATH, szFileName, MAX_PATH, szExt, MAX_PATH);
-
+		
 		LoadLib(L"avutil",m_hLibAVUtil);
 		LoadLib(L"swresample",m_hLibSwresample);
 		LoadLib(L"swscale",m_hLibSwscale);
@@ -4303,12 +4303,27 @@ FFmpeg::AVRational^ FFmpeg::AVRational::d2q(double d, int max)
 	::AVRational a = av_d2q(d,max);
 	return gcnew AVRational(a.num,a.den);
 }
+
+int FFmpeg::AVRational::cmp_q(AVRational^ a, AVRational^ b)
+{
+	if ((Object^)a != nullptr && (Object^)b != nullptr)
+	{
+		return av_cmp_q(*(::AVRational*)a->m_pPointer, *(::AVRational*)b->m_pPointer);
+	}
+	return ((Object^)a == nullptr && (Object^)b == nullptr) ? 0 : INT_MIN;
+}
 //////////////////////////////////////////////////////
 // AVDictionaryEntry
 //////////////////////////////////////////////////////
 FFmpeg::AVDictionaryEntry::AVDictionaryEntry(void * _pointer)
 	: AVBase(_pointer,nullptr)
 {
+}
+
+FFmpeg::AVDictionaryEntry::AVDictionaryEntry(void * _pointer, AVBase^ parent)
+	: AVBase(_pointer,parent)
+{
+
 }
 
 String^ FFmpeg::AVDictionaryEntry::key::get()
@@ -4365,7 +4380,7 @@ FFmpeg::AVDictionaryEntry^ FFmpeg::AVDictionary::AVDictionaryEnumerator::Current
 	{
 		if (!MoveNext()) return nullptr;
 	}
-	return gcnew AVDictionaryEntry(m_pEntry);
+	return _CreateChildObject<AVDictionaryEntry>(m_pEntry,m_pDictionary);
 }
 
 void FFmpeg::AVDictionary::AVDictionaryEnumerator::Reset()
@@ -4502,6 +4517,26 @@ int FFmpeg::AVDictionary::IndexOf(String^ _key)
 bool FFmpeg::AVDictionary::IsExists(String^ _key)
 {
 	return IndexOf(_key) >= 0; 
+}
+
+FFmpeg::AVDictionaryEntry^ FFmpeg::AVDictionary::Find(String^ _key)
+{
+	return Find(_key,AVDictFlags::NONE);
+}
+
+FFmpeg::AVDictionaryEntry^ FFmpeg::AVDictionary::Find(String^ _key, AVDictFlags _flags)
+{
+	char * szKey = nullptr;
+	try
+	{
+		szKey = (char*)AllocString(_key).ToPointer();
+		void * p = av_dict_get((::AVDictionary*)m_pPointer, szKey,NULL, (int)_flags);
+		return _CreateObject<AVDictionaryEntry>(p);
+	}
+	finally
+	{
+		FreeMemory((IntPtr)szKey);
+	}
 }
 //////////////////////////////////////////////////////
 // IEnumerable
@@ -5073,5 +5108,240 @@ void FFmpeg::AVMD5::sum(array<byte>^ % dst, array<byte>^ src, int len)
 void FFmpeg::AVMD5::sum(array<byte>^ % dst, array<byte>^ src)
 {
 	sum(dst, src, 0, src->Length);
+}
+//////////////////////////////////////////////////////
+// AVHashContext
+//////////////////////////////////////////////////////
+struct AVHashContext {};
+//////////////////////////////////////////////////////
+FFmpeg::AVHashContext::AVHashContext(String^ name)
+	: AVBase(nullptr,nullptr)
+{
+	::AVHashContext * p = nullptr;
+	char * szName = nullptr;
+	szName = (char*)AVBase::AllocString(name).ToPointer();
+	try
+	{
+		if (0 == av_hash_alloc(&p,szName))
+		{
+			m_pPointer = p;
+			if (m_pPointer)
+			{
+				m_pFreep = (TFreeFNP *)::av_hash_freep;
+				Reset();
+			}
+		}
+	}
+	finally
+	{
+		AVBase::FreeMemory((IntPtr)szName);
+	}
+}
+//////////////////////////////////////////////////////
+String^ FFmpeg::AVHashContext::name::get()
+{
+	if (!m_pPointer) return "";
+	return gcnew String(av_hash_get_name((const ::AVHashContext *)m_pPointer));
+}
+int FFmpeg::AVHashContext::size::get()
+{
+	if (!m_pPointer) return 0;
+	return av_hash_get_size((const ::AVHashContext *)m_pPointer);
+}
+//////////////////////////////////////////////////////
+String^ FFmpeg::AVHashContext::ToString()
+{
+	return "[ AVHashContext ] \"" + name + "\"";
+}
+//////////////////////////////////////////////////////
+void FFmpeg::AVHashContext::Reset()
+{
+	av_hash_init((::AVHashContext *)m_pPointer);
+}
+void FFmpeg::AVHashContext::Update(IntPtr src, int length)
+{
+	av_hash_update((::AVHashContext*)m_pPointer, (const uint8_t *)src.ToPointer(),length);
+}
+void FFmpeg::AVHashContext::Update(array<byte>^ src)
+{
+	Update(src,0,src->Length);
+}
+void FFmpeg::AVHashContext::Update(array<byte>^ src, int length)
+{
+	Update(src,0,length);
+}
+void FFmpeg::AVHashContext::Update(array<byte>^ src, int start, int length)
+{
+	pin_ptr<byte> _ptr = &src[0];
+	uint8_t * data = ((uint8_t *)_ptr) + start;
+	Update((IntPtr)data,length);
+}
+void FFmpeg::AVHashContext::Update(AVMemPtr^ ptr, int length)
+{
+	Update((IntPtr)ptr,length);
+}
+void FFmpeg::AVHashContext::Update(AVMemPtr^ ptr)
+{
+	Update(ptr,ptr->size);
+}
+void FFmpeg::AVHashContext::Final(IntPtr dst)
+{
+	av_hash_final((::AVHashContext*)m_pPointer,(uint8_t *)dst.ToPointer());
+	Reset();
+}
+void FFmpeg::AVHashContext::Final([Out] array<byte>^ % dst)
+{
+	dst = gcnew array<byte>(size);
+	pin_ptr<byte> _ptr = &dst[0];
+	uint8_t * data = ((uint8_t *)_ptr);
+	Final((IntPtr)data);
+}
+void FFmpeg::AVHashContext::Final([Out] AVMemPtr^ % dst)
+{
+	dst = gcnew AVMemPtr(size);
+	Final((IntPtr)dst);
+}
+//////////////////////////////////////////////////////
+void FFmpeg::AVHashContext::FinalBin(IntPtr dst, int size)
+{
+	av_hash_final_bin((::AVHashContext*)m_pPointer,(uint8_t *)dst.ToPointer(),size);
+	Reset();
+}
+void FFmpeg::AVHashContext::FinalHex([Out] String^ % dst)
+{
+	char temp[(AV_HASH_MAX_SIZE << 1) + 1] = {0};
+	av_hash_final_hex((::AVHashContext*)m_pPointer,(uint8_t*)temp,_countof(temp));
+	dst = gcnew String(temp);
+	Reset();
+}
+void FFmpeg::AVHashContext::FinalB64([Out] String^ % dst)
+{
+	char temp[AV_BASE64_SIZE(AV_HASH_MAX_SIZE) + 1] = {0};
+	av_hash_final_b64((::AVHashContext*)m_pPointer,(uint8_t*)temp,_countof(temp));
+	dst = gcnew String(temp);
+	Reset();
+}
+//////////////////////////////////////////////////////
+array<String^>^ FFmpeg::AVHashContext::Names::get()
+{
+	List<String^>^ list = gcnew List<String^>();
+	int idx = 0;
+	while (true)
+	{
+		const char * name = av_hash_names(idx++);
+		if (!name) break;
+		list->Add(gcnew String(name));
+	}
+	return list->ToArray();
+}
+//////////////////////////////////////////////////////
+// RDFTContext
+//////////////////////////////////////////////////////
+struct RDFTContext {};
+//////////////////////////////////////////////////////
+FFmpeg::RDFTContext::RDFTContext(int nbits, RDFTransformType trans)
+	: AVBase(nullptr,nullptr)
+{
+	LOAD_API(AVCodec,::RDFTContext *,av_rdft_init,int ,::RDFTransformType);
+	LOAD_API(AVCodec,void ,av_rdft_end,::RDFTContext *);
+	if (av_rdft_init)
+	{
+		m_pPointer = av_rdft_init(nbits, (::RDFTransformType)trans);
+	}
+	if (m_pPointer)
+	{
+		if (av_rdft_end)
+		{
+			m_pFree = (TFreeFN*)av_rdft_end;
+		}
+		else
+		{
+			m_pFree = (TFreeFN*)av_free;
+		}
+	}
+}
+//////////////////////////////////////////////////////
+void FFmpeg::RDFTContext::calc(array<FFTSample>^ data)
+{
+	return calc(data,0,data->Length);
+}
+
+void FFmpeg::RDFTContext::calc(array<FFTSample>^ data, int start_idx, int length)
+{
+	pin_ptr<FFTSample> pinp = &data[start_idx];
+	calc((IntPtr)((float*)pinp),length);
+}
+
+void FFmpeg::RDFTContext::calc(IntPtr data)
+{
+	float * f = (float *)data.ToPointer();
+	VOID_API(AVCodec,av_rdft_calc,::RDFTContext *,::FFTSample *)
+	av_rdft_calc((::RDFTContext*)m_pPointer, f);
+}
+
+void FFmpeg::RDFTContext::calc(IntPtr data, int size)
+{
+	return calc(data, 0,size);
+}
+
+void FFmpeg::RDFTContext::calc(IntPtr data,int start_idx,int length)
+{
+	float * f = (float *)data.ToPointer();
+	return calc((IntPtr)(&f[start_idx]));
+}
+//////////////////////////////////////////////////////
+// DCTContext
+//////////////////////////////////////////////////////
+struct DCTContext {};
+//////////////////////////////////////////////////////
+FFmpeg::DCTContext::DCTContext(int nbits, DCTTransformType trans)
+	: AVBase(nullptr,nullptr)
+{
+	LOAD_API(AVCodec,::RDFTContext *,av_dct_init,int ,::DCTTransformType);
+	LOAD_API(AVCodec,void ,av_dct_end,::RDFTContext *);
+	if (av_dct_init)
+	{
+		m_pPointer = av_dct_init(nbits, (::DCTTransformType)trans);
+	}
+	if (m_pPointer)
+	{
+		if (av_dct_end)
+		{
+			m_pFree = (TFreeFN*)av_dct_end;
+		}
+		else
+		{
+			m_pFree = (TFreeFN*)av_free;
+		}
+	}
+}
+//////////////////////////////////////////////////////
+void FFmpeg::DCTContext::calc(array<FFTSample>^ data)
+{
+	return calc(data,0,data->Length);
+}
+
+void FFmpeg::DCTContext::calc(array<FFTSample>^ data, int start_idx, int length)
+{
+	pin_ptr<FFTSample> pinp = &data[start_idx];
+	calc((IntPtr)((float*)pinp),length);
+}
+
+void FFmpeg::DCTContext::calc(IntPtr data)
+{
+	float * f = (float *)data.ToPointer();
+	VOID_API(AVCodec,av_dct_calc,::DCTContext *,::FFTSample *)
+	av_dct_calc((::DCTContext*)m_pPointer, f);
+}
+
+void FFmpeg::DCTContext::calc(IntPtr data, int size)
+{
+	return calc(data, 0,size);
+}
+
+void FFmpeg::DCTContext::calc(IntPtr data,int start_idx,int length)
+{
+	float * f = (float *)data.ToPointer();
+	return calc((IntPtr)(&f[start_idx]));
 }
 //////////////////////////////////////////////////////

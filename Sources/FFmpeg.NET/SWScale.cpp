@@ -593,6 +593,57 @@ int FFmpeg::SwsContext::Scale(array<IntPtr>^ srcSlice,
 	return sws_scale((::SwsContext *)m_pPointer,srcData,srcLinesize,srcSliceY,srcSliceH,dstData,dstLinesize);
 }
 
+int FFmpeg::SwsContext::Scale(AVArray<IntPtr>^ srcSlice,
+	AVArray<int>^ srcStride, int srcSliceY, int srcSliceH,
+	array<IntPtr>^ dst, array<int>^ dstStride)
+{
+	uint8_t * srcData[4] = {0,0,0,0};
+	int srcLinesize[4] = {0,0,0,0};
+
+	uint8_t * dstData[4] = {0,0,0,0};
+	int dstLinesize[4] = {0,0,0,0};
+	for (int i = 0; i < srcSlice->Count && i < _countof(srcData); i++) { srcData[i] = (uint8_t *)srcSlice[i].ToPointer(); }
+	for (int i = 0; i < dst->Length && i < _countof(dstData); i++) { dstData[i] = (uint8_t *)dst[i].ToPointer(); }
+	for (int i = 0; i < srcStride->Count && i < _countof(srcLinesize); i++) { srcLinesize[i] = srcStride[i]; }
+	for (int i = 0; i < dstStride->Length && i < _countof(dstLinesize); i++) { dstLinesize[i] = dstStride[i]; }
+
+	return sws_scale((::SwsContext *)m_pPointer,srcData,srcLinesize,srcSliceY,srcSliceH,dstData,dstLinesize);
+}
+
+int FFmpeg::SwsContext::Scale(array<IntPtr>^ srcSlice,
+	array<int>^ srcStride, int srcSliceY, int srcSliceH,
+	AVArray<IntPtr>^ dst, AVArray<int>^ dstStride)
+{
+	uint8_t * srcData[4] = {0,0,0,0};
+	int srcLinesize[4] = {0,0,0,0};
+
+	uint8_t * dstData[4] = {0,0,0,0};
+	int dstLinesize[4] = {0,0,0,0};
+	for (int i = 0; i < srcSlice->Length && i < _countof(srcData); i++) { srcData[i] = (uint8_t *)srcSlice[i].ToPointer(); }
+	for (int i = 0; i < dst->Count && i < _countof(dstData); i++) { dstData[i] = (uint8_t *)dst[i].ToPointer(); }
+	for (int i = 0; i < srcStride->Length && i < _countof(srcLinesize); i++) { srcLinesize[i] = srcStride[i]; }
+	for (int i = 0; i < dstStride->Count && i < _countof(dstLinesize); i++) { dstLinesize[i] = dstStride[i]; }
+
+	return sws_scale((::SwsContext *)m_pPointer,srcData,srcLinesize,srcSliceY,srcSliceH,dstData,dstLinesize);
+}
+
+int FFmpeg::SwsContext::Scale(AVArray<IntPtr>^ srcSlice,
+	AVArray<int>^ srcStride, int srcSliceY, int srcSliceH,
+	AVArray<IntPtr>^ dst, AVArray<int>^ dstStride)
+{
+	uint8_t * srcData[4] = {0,0,0,0};
+	int srcLinesize[4] = {0,0,0,0};
+
+	uint8_t * dstData[4] = {0,0,0,0};
+	int dstLinesize[4] = {0,0,0,0};
+	for (int i = 0; i < srcSlice->Count && i < _countof(srcData); i++) { srcData[i] = (uint8_t *)srcSlice[i].ToPointer(); }
+	for (int i = 0; i < dst->Count && i < _countof(dstData); i++) { dstData[i] = (uint8_t *)dst[i].ToPointer(); }
+	for (int i = 0; i < srcStride->Count && i < _countof(srcLinesize); i++) { srcLinesize[i] = srcStride[i]; }
+	for (int i = 0; i < dstStride->Count && i < _countof(dstLinesize); i++) { dstLinesize[i] = dstStride[i]; }
+
+	return sws_scale((::SwsContext *)m_pPointer,srcData,srcLinesize,srcSliceY,srcSliceH,dstData,dstLinesize);
+}
+
 int FFmpeg::SwsContext::Scale(AVPicture^ src, int srcSliceY, int srcSliceH, array<IntPtr>^ dst, array<int>^ dstStride)
 {
 	uint8_t * dstData[4] = {0,0,0,0};

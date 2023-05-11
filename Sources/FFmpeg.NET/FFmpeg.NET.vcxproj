@@ -144,6 +144,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies />
       <AdditionalLibraryDirectories>../../ThirdParty/FFmpeg/4.2.2/Lib/$(PlatformTarget)/</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers />
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(ProjectDir)\..\..\ThirdParty\ffmpeg\4.2.2\bin\$(PlatformTarget)\*.dll" "$(TargetDir)" /y /D</Command>
@@ -205,9 +206,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc" />
+    <ResourceCompile Include="Version.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="FFmpeg.NET.nuspec" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

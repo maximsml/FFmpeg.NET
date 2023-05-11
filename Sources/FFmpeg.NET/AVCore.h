@@ -2323,6 +2323,20 @@ public enum class AVHWDeviceType
 	MEDIACODEC,
 };
 //////////////////////////////////////////////////////
+public enum class RDFTransformType {
+	DFT_R2C,
+	IDFT_C2R,
+	IDFT_R2C,
+	DFT_C2R,
+};
+//////////////////////////////////////////////////////
+public enum class DCTTransformType {
+	DCT_II = 0,
+	DCT_III,
+	DCT_I,
+	DST_I,
+};
+//////////////////////////////////////////////////////
 #pragma endregion
 //////////////////////////////////////////////////////
 #pragma region Classes
@@ -4529,7 +4543,7 @@ public:
 		// IEnumerable
 		virtual System::Collections::IEnumerator^ GetEnumerator() sealed = System::Collections::IEnumerable::GetEnumerator;
 	public:
-		// IEnumerable<AVDictionaryEntry>
+		// IEnumerable<String^>
 		virtual System::Collections::Generic::IEnumerator<String^>^ GetEnumeratorGeneric() sealed = System::Collections::Generic::IEnumerable<String^>::GetEnumerator;
 	};
 public:
@@ -4572,7 +4586,7 @@ public:
 		// IEnumerable
 		virtual System::Collections::IEnumerator^ GetEnumerator() sealed = System::Collections::IEnumerable::GetEnumerator;
 	public:
-		// IEnumerable<AVDictionaryEntry>
+		// IEnumerable<AVProfile^>
 		virtual System::Collections::Generic::IEnumerator<AVProfile^>^ GetEnumeratorGeneric() sealed = System::Collections::Generic::IEnumerable<AVProfile^>::GetEnumerator;
 	};
 public:
@@ -4781,6 +4795,19 @@ public:
 	/// <param name="max">the maximum allowed numerator and denominator</param>
 	/// <returns>rational value</returns>
 	static AVRational^ d2q(double d, int max);
+
+	/// <summary>
+	/// Compare two rationals.
+	/// </summary>
+	/// <param name="a">First rational</param>
+	/// <param name="b">Second rational</param>
+	/// <returns>One of the following values:
+	///        - 0 if `a == b`
+	///        - 1 if `a > b`
+	///        - -1 if `a < b`
+	///        - `INT_MIN` if one of the values is of the form `0 / 0`
+	/// </returns>
+	static int cmp_q(AVRational^ a, AVRational^ b);
 };
 //////////////////////////////////////////////////////
 // AVDictionaryEntry
@@ -4788,6 +4815,7 @@ public ref class AVDictionaryEntry : public AVBase
 {
 internal:
 	AVDictionaryEntry(void * _pointer);
+	AVDictionaryEntry(void * _pointer,AVBase^ parent);
 public:
 	property String^ key { String^ get(); }
 	property String^ value { String^ get(); }
@@ -4904,6 +4932,8 @@ public:
 	void SetValue(String^ _key,String^ _value, AVDictFlags _flags);
 	int IndexOf(String^ _key);
 	bool IsExists(String^ _key);
+	AVDictionaryEntry^ Find(String^ _key);
+	AVDictionaryEntry^ Find(String^ _key, AVDictFlags _flags);
 public:
 	// IEnumerable
 	virtual System::Collections::IEnumerator^ GetEnumerator() sealed = System::Collections::IEnumerable::GetEnumerator;
@@ -5234,6 +5264,80 @@ public:
 	static void sum([Out] array<byte>^ % dst, array<byte>^ src, int start, int len);
 	static void sum([Out] array<byte>^ % dst, array<byte>^ src, int len);
 	static void sum([Out] array<byte>^ % dst, array<byte>^ src);
+};
+//////////////////////////////////////////////////////
+// AVHashContext
+public ref class AVHashContext : public AVBase
+{
+public:
+	const int MAX_SIZE = AV_HASH_MAX_SIZE;
+public:
+	AVHashContext(String^ name);
+public:
+	property String^ name { String^ get(); }
+	property int size { int get(); }
+public:
+	virtual String^ ToString() override;
+public:
+	void Reset();
+	// Update hash value.
+	void Update(IntPtr src, int length);
+	void Update(array<byte>^ src);
+	void Update(array<byte>^ src, int length);
+	void Update(array<byte>^ src, int start, int length);
+	void Update(AVMemPtr^ ptr, int length);
+	void Update(AVMemPtr^ ptr);
+	// Finish hashing and output digest value.
+	void Final(IntPtr dst);
+	void Final([Out] array<byte>^ % dst);
+	void Final([Out] AVMemPtr^ % dst);
+public:
+	void FinalBin(IntPtr dst,int size);
+	void FinalHex([Out] String^ % dst);
+	void FinalB64([Out] String^ % dst);
+public:
+	static property array<String^>^ Names { array<String^>^ get(); }
+};
+//////////////////////////////////////////////////////
+public value class FFTSample
+{
+private:
+	float m_fValue;
+public:
+	FFTSample(float val) : m_fValue(val) {}
+public:
+	static bool operator == (FFTSample a,FFTSample b)  { return a.m_fValue == b.m_fValue; }
+	static bool operator != (FFTSample a, FFTSample b) { return a.m_fValue != b.m_fValue; }
+public:
+	static operator float(FFTSample sample) { return sample.m_fValue; }
+public:
+	virtual String^ ToString() override { return m_fValue.ToString(); }
+};
+//////////////////////////////////////////////////////
+// RDFTContext
+public ref class RDFTContext : public AVBase
+{
+public:
+	RDFTContext(int nbits,RDFTransformType trans);
+public:
+	void calc(array<FFTSample>^ data);
+	void calc(array<FFTSample>^ data,int start_idx,int length);
+	void calc(IntPtr data);
+	void calc(IntPtr data,int size);
+	void calc(IntPtr data,int start_idx,int length);
+};
+//////////////////////////////////////////////////////
+// DCTContext
+public ref class DCTContext : public AVBase
+{
+public:
+	DCTContext(int nbits,DCTTransformType trans);
+public:
+	void calc(array<FFTSample>^ data);
+	void calc(array<FFTSample>^ data,int start_idx,int length);
+	void calc(IntPtr data);
+	void calc(IntPtr data,int size);
+	void calc(IntPtr data,int start_idx,int length);
 };
 //////////////////////////////////////////////////////
 #pragma endregion

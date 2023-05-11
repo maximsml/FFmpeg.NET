@@ -1,0 +1,39 @@
+//////////////////////////////////////////////////////
+// FFMPEG .NET Wrapper
+// Copyright (C) 2018-2022 Maxim Kartavenkov (mkartavenkov@gmail.com)
+//
+// The FFmpeg.NET Wrapper of ffmpeg libraries is provided "as is" 
+// without warranty of any kind; without even the implied warranty 
+// of merchantability or fitness for a particular purpose. 
+//
+// FFmpeg.NET Wrapper library is free for non-commercial usage
+// Usage terms described in attached license text file
+//
+// Library Version Details
+///////////////////////////////////////////////////////
+#pragma once
+///////////////////////////////////////////////////////
+#include <ntverp.h>
+///////////////////////////////////////////////////////
+#include "./CommonVer.h"
+///////////////////////////////////////////////////////
+#define VER_COMPANYNAME_STR			"Maxim Kartavenkov"
+#define VER_PRODUCTNAME_STR			"FFmpeg.NET"
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILEDESCRIPTION_STR     ".NET Wrapper of the FFmpeg libraries"
+#define VER_ORIGINALFILENAME_STR    "FFmpeg.NET.dll"
+#define VER_LEGALCOPYRIGHT_YEARS	2023
+#define VER_LEGALCOPYRIGHT_STR		"Copyright " COPYRIGHT_C " Maxim Kartavenkov aka Sonic 2017-" VER_LEGALCOPYRIGHT_YEARS "."
+#define VER_PRODUCTMAJORVERSION		1
+#define VER_PRODUCTMINORVERSION		0
+#define VER_PRODUCTREVISION			2305
+#define VER_PRODUCTBUILD			1101
+///////////////////////////////////////////////////////
+#ifdef RC_INVOKED
+///////////////////////////////////////////////////////
+#include <windows.h>
+///////////////////////////////////////////////////////
+#endif
+///////////////////////////////////////////////////////
+#include "./Version.hpp"
+///////////////////////////////////////////////////////
