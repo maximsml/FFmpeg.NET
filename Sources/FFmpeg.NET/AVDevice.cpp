@@ -129,8 +129,11 @@ FFmpeg::AVDeviceCapabilitiesQuery::~AVDeviceCapabilitiesQuery()
 {
 	if (m_pPointer && m_pFormatContext)
 	{
-		::AVDeviceCapabilitiesQuery * _caps = (::AVDeviceCapabilitiesQuery *)m_pPointer;
-		avdevice_capabilities_free(&_caps, (::AVFormatContext*)m_pFormatContext->_Pointer.ToPointer());
+		LOAD_API(AVDevice,int,avdevice_capabilities_free,::AVDeviceCapabilitiesQuery **, ::AVFormatContext *);
+		if (avdevice_capabilities_free) {
+			::AVDeviceCapabilitiesQuery * _caps = (::AVDeviceCapabilitiesQuery *)m_pPointer;
+			avdevice_capabilities_free(&_caps, (::AVFormatContext*)m_pFormatContext->_Pointer.ToPointer());
+		}
 		m_pPointer = nullptr;
 		m_pFormatContext = nullptr;
 	}
@@ -240,20 +243,23 @@ FFmpeg::AVDeviceCapabilitiesQuery^ FFmpeg::AVDeviceCapabilitiesQuery::Create(AVF
 	::AVDictionary * _dict = device_options != nullptr ? (::AVDictionary *)device_options->_Pointer.ToPointer() : nullptr;
 	try
 	{
-		int _result = avdevice_capabilities_create(&caps, (::AVFormatContext*)s->_Pointer.ToPointer(),&_dict);
-		if (device_options)
-		{
-			device_options->ChangePointer(_dict);
-			_dict = nullptr;
-		}
-		if (_result >= 0)
-		{
-			auto _caps = _CreateChildObject<AVDeviceCapabilitiesQuery>(caps,s);
-			if (_caps != nullptr)
+		LOAD_API(AVDevice,int,avdevice_capabilities_create,::AVDeviceCapabilitiesQuery **, ::AVFormatContext *,::AVDictionary **);
+		if (avdevice_capabilities_create) {
+			int _result = avdevice_capabilities_create(&caps, (::AVFormatContext*)s->_Pointer.ToPointer(), &_dict);
+			if (device_options)
 			{
-				_caps->m_pFormatContext = s;
+				device_options->ChangePointer(_dict);
+				_dict = nullptr;
 			}
-			return _caps;
+			if (_result >= 0)
+			{
+				auto _caps = _CreateChildObject<AVDeviceCapabilitiesQuery>(caps, s);
+				if (_caps != nullptr)
+				{
+					_caps->m_pFormatContext = s;
+				}
+				return _caps;
+			}
 		}
 	}
 	finally

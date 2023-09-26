@@ -42,7 +42,17 @@ FFmpeg::AVColorSpace::AVColorSpace(::AVColorSpace value)
 //////////////////////////////////////////////////////
 String^ FFmpeg::AVColorSpace::ToString()
 {
-	auto p = av_color_space_name((::AVColorSpace)m_nValue);
+	LOAD_API(AVUtil,const char *,av_get_colorspace_name,const ::AVColorSpace);
+	LOAD_API(AVUtil,const char *,av_color_space_name,const ::AVColorSpace);
+
+	const char * p = nullptr;
+	if (av_color_space_name) {
+		p = av_color_space_name((::AVColorSpace)m_nValue);
+	} else {
+		if (av_get_colorspace_name) {
+			p = av_get_colorspace_name((::AVColorSpace)m_nValue);
+		}
+	}
 	return p != nullptr ? gcnew String(p) : __super::ToString();
 }
 
@@ -3641,7 +3651,9 @@ FFmpeg::AVClass^ FFmpeg::AVClass::GetCodecClass()
 
 FFmpeg::AVClass^ FFmpeg::AVClass::GetFrameClass()
 {
-	const ::AVClass * _ptr = ::avcodec_get_frame_class();
+	void * _ptr = nullptr;
+	PTR_API(AVCodec,avcodec_get_frame_class)
+	_ptr = avcodec_get_frame_class();
 	if (_ptr) return gcnew AVClass((void*)_ptr,nullptr);
 	return nullptr;
 }
@@ -4895,6 +4907,24 @@ int FFmpeg::AVAudioFifo::Write(AVArray<IntPtr>^ data, int nb_samples)
 	void ** _data = (void**)data->_Pointer.ToPointer();
 	return av_audio_fifo_write((::AVAudioFifo*)m_pPointer,_data,nb_samples);
 }
+int FFmpeg::AVAudioFifo::Write(array<AVMemPtr^>^ data, int nb_samples)
+{
+	void * _data[AV_NUM_DATA_POINTERS] = { 0 };
+	for (int i = 0; i < data->Length && i < AV_NUM_DATA_POINTERS; i++) { _data[i] = ((IntPtr)data[i]).ToPointer(); }
+	return av_audio_fifo_write((::AVAudioFifo*)m_pPointer,_data,nb_samples);
+}
+int FFmpeg::AVAudioFifo::Write(AVArray<AVMemPtr^>^ data, int nb_samples)
+{
+	return Write(data->ToPtrArray(),nb_samples);
+}
+int FFmpeg::AVAudioFifo::Write(AVFrame^ frame, int nb_samples)
+{
+	return Write(frame->data->ToPtrArray(),nb_samples);
+}
+int FFmpeg::AVAudioFifo::Write(AVFrame^ frame)
+{
+	return Write(frame->data->ToPtrArray(),frame->nb_samples);
+}
 //////////////////////////////////////////////////////
 int FFmpeg::AVAudioFifo::Read(array<IntPtr>^ data, int nb_samples)
 {
@@ -4911,6 +4941,26 @@ int FFmpeg::AVAudioFifo::Read(AVArray<IntPtr>^ data, int nb_samples)
 {
 	void ** _data = (void**)data->_Pointer.ToPointer();
 	return av_audio_fifo_read((::AVAudioFifo*)m_pPointer,_data,nb_samples);
+}
+int FFmpeg::AVAudioFifo::Read(AVArray<AVMemPtr^>^ data, int nb_samples)
+{
+	void * _data[AV_NUM_DATA_POINTERS] = { 0 };
+	for (int i = 0; i < data->Count && i < AV_NUM_DATA_POINTERS; i++) { _data[i] = ((IntPtr)data[i]).ToPointer(); }
+	return av_audio_fifo_read((::AVAudioFifo*)m_pPointer,_data,nb_samples);
+}
+int FFmpeg::AVAudioFifo::Read(array<AVMemPtr^>^ data, int nb_samples)
+{
+	void * _data[AV_NUM_DATA_POINTERS] = { 0 };
+	for (int i = 0; i < data->Length && i < AV_NUM_DATA_POINTERS; i++) { _data[i] = ((IntPtr)data[i]).ToPointer(); }
+	return av_audio_fifo_read((::AVAudioFifo*)m_pPointer,_data,nb_samples);
+}
+int FFmpeg::AVAudioFifo::Read(AVFrame^ frame, int nb_samples)
+{
+	return Read(frame->data,nb_samples);
+}
+int FFmpeg::AVAudioFifo::Read(AVFrame^ frame) 
+{
+	return Read(frame->data,frame->nb_samples);
 }
 //////////////////////////////////////////////////////
 // AVFifoBuffer

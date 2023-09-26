@@ -72,9 +72,10 @@ void FFmpeg::LibAVFilter::RegisterAll()
 //////////////////////////////////////////////////////
 FFmpeg::AVFilter::AVFilterPadList::AVFilterPadList(void * _pointer, AVBase^ _parent)
 	: AVBase(_pointer, _parent)
+	, m_bIsOutput(false)
+	, m_bUpdated(false)
 {
 	m_Pads = gcnew List<AVFilterPad^>();
-	Update();
 }
 FFmpeg::AVFilter::AVFilterPadList::~AVFilterPadList()
 {
@@ -82,9 +83,28 @@ FFmpeg::AVFilter::AVFilterPadList::~AVFilterPadList()
 	delete m_Pads;
 }
 //////////////////////////////////////////////////////
+void FFmpeg::AVFilter::AVFilterPadList::SetOutputType(bool bOutput) {
+	if (m_bIsOutput != bOutput) {
+		m_bIsOutput = bOutput;
+		m_bUpdated = false;
+	}
+}
+//////////////////////////////////////////////////////
 void FFmpeg::AVFilter::AVFilterPadList::Update()
 {
-	int _count = avfilter_pad_count((const ::AVFilterPad *)m_pPointer);
+	m_bUpdated = true;
+	LOAD_API(AVFilter,int ,avfilter_filter_pad_count,const ::AVFilter *,int);
+	LOAD_API(AVFilter,int ,avfilter_pad_count,const ::AVFilterPad *);
+
+	int _count = 0;
+	if (avfilter_pad_count) {
+		_count = avfilter_pad_count((const ::AVFilterPad *)m_pPointer);
+	}
+	else {
+		if (avfilter_filter_pad_count) {
+			_count = avfilter_filter_pad_count(((const ::AVFilter *)m_pParent->_Pointer.ToPointer()),m_bIsOutput ? 1 : 0);
+		}
+	}
 	if (m_Pads->Count < _count)
 	{
 		for (int i = m_Pads->Count; i < _count; i++)
@@ -187,7 +207,9 @@ FFmpeg::AVFilter::AVFilterPadList^ FFmpeg::AVFilter::inputs::get()
 	const ::AVFilterPad * _pads = ((::AVFilter*)m_pPointer)->inputs;
 	if (_pads)
 	{
-		return _CreateObject<AVFilterPadList>((void*)_pads);
+		auto list = _CreateObject<AVFilterPadList>((void*)_pads);
+		list->SetOutputType(false);
+		return list;
 	}
 	return nullptr;
 }
@@ -196,7 +218,9 @@ FFmpeg::AVFilter::AVFilterPadList^ FFmpeg::AVFilter::outputs::get()
 	const ::AVFilterPad * _pads = ((::AVFilter*)m_pPointer)->outputs;
 	if (_pads)
 	{
-		return _CreateObject<AVFilterPadList>((void*)_pads);
+		auto list = _CreateObject<AVFilterPadList>((void*)_pads);
+		list->SetOutputType(true);
+		return list;
 	}
 	return nullptr;
 }
@@ -701,7 +725,17 @@ FFmpeg::AVRational^ FFmpeg::AVFilterLink::time_base::get()
 
 int FFmpeg::AVFilterLink::channels::get()
 {
-	DYNAMIC_DEF_API(AVFilter,int,((::AVFilterLink*)m_pPointer)->channels,avfilter_link_get_channels,::AVFilterLink * )
+	int channels = 0;
+#if FF_API_OLD_CHANNEL_LAYOUT
+	channels = av_get_channel_layout_nb_channels(((::AVFilterLink*)m_pPointer)->channel_layout);
+#else
+#if (LIBAVFILTER_VERSION_MAJOR * 100 + LIBAVFILTER_VERSION_MINOR > 801)
+	channels = ((::AVFilterLink*)m_pPointer)->ch_layout.nb_channels;
+#	else 
+	channels = ((::AVFilterLink*)m_pPointer)->channels;
+#	endif
+#endif
+	DYNAMIC_DEF_API(AVFilter,int,channels,avfilter_link_get_channels,::AVFilterLink * )
 	return avfilter_link_get_channels((::AVFilterLink*)m_pPointer);
 }
 
@@ -1820,7 +1854,6 @@ FFmpeg::AVBufferSinkParams::AVBufferSinkParams(void * _pointer, AVBase^ _parent)
 		m_Formats = _CreateObject<AVPixelFormats>((void*)((::AVBufferSinkParams*)_pointer)->pixel_fmts);
 	}
 }
-
 FFmpeg::AVBufferSinkParams::AVBufferSinkParams()
 	: AVBase(nullptr, nullptr)
 {

@@ -346,7 +346,11 @@ bool FFmpeg::AVIOContext::seekable::get()
 }
 Int64 FFmpeg::AVIOContext::maxsize::get()
 {
+#if LIBAVFORMAT_VERSION_MAJOR * 100 + LIBAVFORMAT_VERSION_MINOR > 5904
+	return 0;
+#else
 	return ((::AVIOContext*)m_pPointer)->maxsize;
+#endif
 }
 bool FFmpeg::AVIOContext::direct::get()
 {
@@ -356,17 +360,39 @@ Int64 FFmpeg::AVIOContext::bytes_read::get()
 {
 	return ((::AVIOContext*)m_pPointer)->bytes_read;
 }
+
+Int64 FFmpeg::AVIOContext::bytes_written::get()
+{
+#if FF_API_AVIOCONTEXT_WRITTEN
+	return ((::AVIOContext*)m_pPointer)->written;
+#else
+	return ((::AVIOContext*)m_pPointer)->bytes_written;
+#endif
+}
+
 int FFmpeg::AVIOContext::seek_count::get()
 {
+#if LIBAVFORMAT_VERSION_MAJOR * 100 + LIBAVFORMAT_VERSION_MINOR > 5904
+	return 0;
+#else
 	return ((::AVIOContext*)m_pPointer)->seek_count;
+#endif
 }
 int FFmpeg::AVIOContext::writeout_count::get()
 {
+#if LIBAVFORMAT_VERSION_MAJOR * 100 + LIBAVFORMAT_VERSION_MINOR > 5904
+	return 0;
+#else
 	return ((::AVIOContext*)m_pPointer)->writeout_count;
+#endif
 }
 int FFmpeg::AVIOContext::orig_buffer_size::get()
 {
+#if LIBAVFORMAT_VERSION_MAJOR * 100 + LIBAVFORMAT_VERSION_MINOR > 5904
+	return 0;
+#else
 	return ((::AVIOContext*)m_pPointer)->orig_buffer_size;
+#endif
 }
 //////////////////////////////////////////////////////
 void FFmpeg::AVIOContext::w8(int b)
@@ -1116,7 +1142,11 @@ array<FFmpeg::AVCodecTag^>^ FFmpeg::AVOutputFormat::codec_tag::get()
 
 FFmpeg::AVCodecID FFmpeg::AVOutputFormat::data_codec::get()
 { 
+#if LIBAVFORMAT_VERSION_MAJOR < 60
 	return (FFmpeg::AVCodecID)((::AVOutputFormat*)m_pPointer)->data_codec;
+#else
+	return FFmpeg::AVCodecID::NONE;
+#endif
 }
 //////////////////////////////////////////////////////
 FFmpeg::AVFormatContext^ FFmpeg::AVOutputFormat::OpenContext()
@@ -1627,7 +1657,7 @@ FFmpeg::AVCodecContext^ FFmpeg::AVStream::codec::get()
 #if FF_API_LAVF_AVCTX
 	auto p = ((::AVStream*)m_pPointer)->codec;
 	return _CreateObject<FFmpeg::AVCodecContext>((void*)p);
-#endif
+#else
 	if (m_pContext == nullptr)
 	{
 		LOAD_API(AVFormat,::AVCodec *,av_format_get_audio_codec,::AVFormatContext *);
@@ -1751,13 +1781,14 @@ FFmpeg::AVCodecContext^ FFmpeg::AVStream::codec::get()
 		}
 	}
 	return m_pContext;
+#endif
 }
 void FFmpeg::AVStream::codec::set(AVCodecContext^ value)
 {
 #if FF_API_LAVF_AVCTX
 	AddObject((IntPtr)((::AVStream*)m_pPointer)->codec,value);
 	((::AVStream*)m_pPointer)->codec = (value != nullptr ? (::AVCodecContext*)value->_Pointer.ToPointer() : nullptr);
-#endif
+#else
 	AVBase^ ctx = m_pContext;
 	if (value != nullptr)
 	{
@@ -1769,6 +1800,7 @@ void FFmpeg::AVStream::codec::set(AVCodecContext^ value)
 		RemoveObject(ctx->_Pointer);
 		delete ctx;
 	}
+#endif
 }
 
 IntPtr FFmpeg::AVStream::priv_data::get()

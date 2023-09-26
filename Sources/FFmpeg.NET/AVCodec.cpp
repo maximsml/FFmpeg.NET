@@ -1647,7 +1647,7 @@ FFmpeg::AVPacket::AVPacket(AVBufferRef^ buf)
 	m_pDescructor = (TFreeFN*)av_packet_unref;
 	av_init_packet(p);
 	p->data = bufref->data;
-	p->size = bufref->size;
+	p->size = (int)bufref->size;
 	p->buf = bufref;
 	m_pPointer = p;
 	AddObject((IntPtr)bufref,buf);
@@ -2740,12 +2740,24 @@ void FFmpeg::AVFrame::extended_buf::set(array<AVBufferRef^>^ value)
 	}
 	if (value != nullptr && value->Length > 0)
 	{
+		LOAD_API(AVUtil,void*,av_mallocz_array,size_t,size_t);
+		LOAD_API(AVUtil,void*,av_calloc,size_t,size_t);
+
 		_frame->nb_extended_buf = value->Length;
-		_frame->extended_buf = (::AVBufferRef **)av_mallocz_array(_frame->nb_extended_buf,sizeof(*_frame->extended_buf));
-		for (int i = 0; i < _frame->nb_extended_buf;i++)
-		{
-			_frame->extended_buf[i] = (::AVBufferRef *)value[i]->_Pointer.ToPointer();
-			AddObject(value[i]);
+		if (av_mallocz_array) {
+			_frame->extended_buf = (::AVBufferRef **)av_mallocz_array(_frame->nb_extended_buf, sizeof(*_frame->extended_buf));
+		}
+		else {
+			if (av_calloc) {
+				_frame->extended_buf = (::AVBufferRef **)av_calloc(_frame->nb_extended_buf, sizeof(*_frame->extended_buf));
+			}
+		}
+		if (_frame->extended_buf) {
+			for (int i = 0; i < _frame->nb_extended_buf; i++)
+			{
+				_frame->extended_buf[i] = (::AVBufferRef *)value[i]->_Pointer.ToPointer();
+				AddObject(value[i]);
+			}
 		}
 	}
 }
@@ -3127,7 +3139,18 @@ System::Drawing::Bitmap^ FFmpeg::AVFrame::ToBitmap()
 //////////////////////////////////////////////////////
 String^ FFmpeg::AVFrame::GetColorspaceName(AVColorSpace val)
 {
-	auto p = av_get_colorspace_name((::AVColorSpace)val);
+	LOAD_API(AVUtil,const char *,av_get_colorspace_name,const ::AVColorSpace);
+	LOAD_API(AVUtil,const char *,av_color_space_name,const ::AVColorSpace);
+
+	const char * p = nullptr;
+	if (av_get_colorspace_name) {
+		p = av_get_colorspace_name((::AVColorSpace)val);
+	}
+	else {
+		if (av_color_space_name) {
+			p = av_color_space_name((::AVColorSpace)val);
+		}
+	}
 	return p != nullptr ? gcnew String(p) : nullptr;
 }
 //////////////////////////////////////////////////////
@@ -3242,7 +3265,11 @@ System::Drawing::Bitmap^ FFmpeg::AVFrame::ToBitmap(AVFrame^ _frame)
 //////////////////////////////////////////////////////
 FFmpeg::AVClass^ FFmpeg::AVFrame::GetClass()
 {
-	return gcnew AVClass((void*)avcodec_get_frame_class(),nullptr);
+	void * _ptr = nullptr;
+	PTR_API(AVCodec,avcodec_get_frame_class)
+	_ptr = avcodec_get_frame_class();
+	if (_ptr) return gcnew AVClass((void*)_ptr,nullptr);
+	return nullptr;
 }
 //////////////////////////////////////////////////////
 // AVCodecHWConfig
@@ -5051,11 +5078,17 @@ void FFmpeg::AVCodecContext::debug::set(FFDebug value)
 }
 FFmpeg::FFDebugMV FFmpeg::AVCodecContext::debug_mv::get()
 {
+#if FF_API_DEBUG_MV
 	return (FFDebugMV)((::AVCodecContext*)m_pPointer)->debug_mv;
+#else
+	return FFmpeg::FFDebugMV::None;
+#endif
 }
 void FFmpeg::AVCodecContext::debug_mv::set(FFDebugMV value)
 {
+#if FF_API_DEBUG_MV
 	((::AVCodecContext*)m_pPointer)->debug_mv = (int)value;
+#endif
 }
 FFmpeg::ErrorRecognition FFmpeg::AVCodecContext::err_recognition::get()
 {
@@ -5183,11 +5216,17 @@ FFmpeg::ThreadType FFmpeg::AVCodecContext::active_thread_type::get()
 }
 int FFmpeg::AVCodecContext::thread_safe_callbacks::get()
 {
+#if FF_API_THREAD_SAFE_CALLBACKS
 	return ((::AVCodecContext*)m_pPointer)->thread_safe_callbacks;
+#else
+	return 0;
+#endif
 }
 void FFmpeg::AVCodecContext::thread_safe_callbacks::set(int value)
 {
+#if FF_API_THREAD_SAFE_CALLBACKS
 	((::AVCodecContext*)m_pPointer)->thread_safe_callbacks = value;
+#endif
 }
 int FFmpeg::AVCodecContext::nsse_weight::get()
 {
@@ -5567,11 +5606,17 @@ void FFmpeg::AVCodecContext::hw_frames_ctx::set(FFmpeg::AVBufferRef^ value)
 }
 FFmpeg::FF_SUB_TEXT_FMT FFmpeg::AVCodecContext::sub_text_format::get()
 {
+#if FF_API_SUB_TEXT_FORMAT
 	return (FF_SUB_TEXT_FMT)((::AVCodecContext*)m_pPointer)->sub_text_format;
+#else
+	return FFmpeg::FF_SUB_TEXT_FMT::ASS;
+#endif
 } 
 void FFmpeg::AVCodecContext::sub_text_format::set(FF_SUB_TEXT_FMT value)
 {
+#if FF_API_SUB_TEXT_FORMAT
 	((::AVCodecContext*)m_pPointer)->sub_text_format = (int)value;
+#endif
 } 
 int FFmpeg::AVCodecContext::trailing_padding::get()
 {

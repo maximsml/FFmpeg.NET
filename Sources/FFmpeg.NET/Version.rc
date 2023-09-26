@@ -26,8 +26,8 @@
 #define VER_LEGALCOPYRIGHT_STR		"Copyright " COPYRIGHT_C " Maxim Kartavenkov aka Sonic 2017-" VER_LEGALCOPYRIGHT_YEARS "."
 #define VER_PRODUCTMAJORVERSION		1
 #define VER_PRODUCTMINORVERSION		0
-#define VER_PRODUCTREVISION			2305
-#define VER_PRODUCTBUILD			1101
+#define VER_PRODUCTREVISION			2309
+#define VER_PRODUCTBUILD			1201
 ///////////////////////////////////////////////////////
 #ifdef RC_INVOKED
 ///////////////////////////////////////////////////////

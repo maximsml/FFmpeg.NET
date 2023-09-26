@@ -5118,6 +5118,11 @@ public:
 	int Write(array<IntPtr>^ data, int nb_samples);
 	int Write(IntPtr data, int nb_samples);
 	int Write(AVArray<IntPtr>^ data, int nb_samples);
+	int Write(AVArray<AVMemPtr^>^ data, int nb_samples);
+	int Write(array<AVMemPtr^>^ data, int nb_samples);
+	int Write(AVFrame^ frame, int nb_samples);
+	int Write(AVFrame^ frame);
+
 	/// Read data from an AVAudioFifo.
 	///
 	/// @see enum AVSampleFormat
@@ -5133,6 +5138,10 @@ public:
 	int Read(array<IntPtr>^ data, int nb_samples);
 	int Read(IntPtr data, int nb_samples);
 	int Read(AVArray<IntPtr>^ data, int nb_samples);
+	int Read(AVArray<AVMemPtr^>^ data, int nb_samples);
+	int Read(array<AVMemPtr^>^ data, int nb_samples);
+	int Read(AVFrame^ frame, int nb_samples);
+	int Read(AVFrame^ frame);
 };
 //////////////////////////////////////////////////////
 public delegate void AVFifoReadDelegate(IntPtr, IntPtr, int);

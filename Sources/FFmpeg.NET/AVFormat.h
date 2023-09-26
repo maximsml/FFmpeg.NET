@@ -498,6 +498,7 @@ public:
 	property Int64 maxsize { Int64 get(); }
 	property bool direct { bool get(); }
 	property Int64 bytes_read { Int64 get(); }
+	property Int64 bytes_written { Int64 get(); }
 	property int seek_count { int get(); }
 	property int writeout_count { int get(); }
 	property int orig_buffer_size { int get(); }

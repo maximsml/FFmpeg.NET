@@ -55,3 +55,11 @@ using namespace System::Security::Permissions;
 // 
 // 1.0.2207.0201 - Initial Version
 // 1.0.2207.2301 - Added Version Information
+// 1.0.2305.1101:
+// - Added Hash Algorithms
+// - AVCodecContext Extradata Fix
+// 1.0.2309.1401:
+// - Added Support of ffmpeg versions 4.4.1, 5.1.2, 6.0.0
+// - Added Video Capture Example
+// - Added Streaming Example
+// - Added RTSP Receiving Example

@@ -516,7 +516,11 @@ int FFmpeg::SwrContext::Convert(array<AVMemPtr^>^ out, int out_count, AVFrame^ f
 
 FFmpeg::AVRESULT FFmpeg::SwrContext::Convert(AVFrame^ output,AVFrame^ input)
 {
-	return swr_convert_frame((::SwrContext*)m_pPointer,(::AVFrame *)output->_Pointer.ToPointer(),(::AVFrame *)input->_Pointer.ToPointer());
+	AVRESULT ret = swr_convert_frame((::SwrContext*)m_pPointer,(::AVFrame *)output->_Pointer.ToPointer(),(::AVFrame *)input->_Pointer.ToPointer());
+	if (ret < 0) {
+		return ret;
+	}
+	return ((::AVFrame *)output->_Pointer.ToPointer())->nb_samples;
 }
 
 Int64 FFmpeg::SwrContext::NextPts(Int64 pts)

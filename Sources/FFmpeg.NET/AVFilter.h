@@ -159,11 +159,15 @@ public:
 		, public System::Collections::Generic::IEnumerable<AVFilterPad^>
 	{
 	private:
+		bool m_bIsOutput;
+		bool m_bUpdated;
 		List<AVFilterPad^>^ m_Pads;
 	internal:
 		AVFilterPadList(void * _pointer,AVBase^ _parent);
 	internal:
 		~AVFilterPadList();
+	internal:
+		void SetOutputType(bool bOutput);
 	public:
 		array<AVFilterPad^>^ ToArray();
 	private:
